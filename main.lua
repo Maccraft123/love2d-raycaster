@@ -1,5 +1,5 @@
 function love.load()
-	map		= {{}, {}, {}}
+	map		= {}
 	map[1]		= {1, 1, 1, 1, 1, 1, 1, 1}
 	map[2]		= {1, 0, 0, 1, 0, 0, 0, 1}
 	map[3]		= {1, 0, 0, 1, 0, 1, 1, 1}
@@ -9,15 +9,15 @@ function love.load()
 	map[7]		= {1, 0, 0, 0, 0, 1, 0, 1}
 	map[8]		= {1, 1, 1, 1, 1, 1, 1, 1}
 
-	msx		= 8
-	msy		= 8
+	msx		= 8	-- width of map
+	msy		= 8	-- height of map
 
-	s		= 50
+	s		= 50	-- size of each tile, don't change
 
 	camera		= {}
-	camera.x	= 400
-	camera.y	= 300
-	camera.a	= 0
+	camera.x	= 430	-- starting x coordinate of camera
+	camera.y	= 230	-- starting y coordinate of camera
+	camera.a	= 5	-- starting camera angle
 end
 
 function love.update(dt)
@@ -79,30 +79,31 @@ function between(sx, sy, ex, ey, tx, ty)
 end
 
 function love.draw()
-	for i=1,181,1 do
-		for j=1,msx,1 do
-			for k=1,msy,1 do
+	for i=1,181,1 do -- for every ray
+		for j=1,msx,1 do -- for every tile
+			for k=1,msy,1 do -- ^
 				if map[k][j] == 1 then
-					sx		= 100+s*(j-1)
-					sy		= 100+s*(k-1)
-					ex		= sx + s
+					sx		= s*(j-1) -- starting x coord of one of 4 lines
+					sy		= s*(k-1) -- starting y coord of one of 4 lines
+					ex		= sx + s  -- ending x coord of one of 4 lines
 					ey		= sy
-					angle		= camera.a+((i/2)-45)*math.pi/180
-					endX		= camera.x+(math.sin(angle)*300)
-					endY		= camera.y+(math.cos(angle)*300)
-					r,iX, iY 	= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					if r == true then
-						if sX == nil then
+					angle		= camera.a+((i/2)-45)*math.pi/180 -- angle in degrees
+					endX		= camera.x+(math.sin(angle)*300) -- x coord of point at end of ray
+					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
+					-- check collision between ray and one of 4 lines of tile
+					r,iX, iY 	= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey) 
+					if r == true then -- if colission detected
+						if sX == nil then -- if no previous collision
 							sX = iX
 							sY = iY
-						else
+						else	-- if current collision is closer than previous
 							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
 								sX = iX
 								sY = iY
 							end
 						end
 					end
-					
+					-- repeat 3 more times with different parts
 					ex		= sx
 					ey		= sy + s
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
@@ -153,23 +154,26 @@ function love.draw()
 				end
 			end
 		end
-		if sX ~= nil then
+		
+		if sX ~= nil then --if collision detected
 			if ssX == nil or distance(sX, sY, camera.x, camera.y) < distance(ssX, ssY, camera.x, camera.y) then
+				-- ^ if no collusion was detected on whole ray OR current collision is closest
 				ssX = sX
 				ssY = sY
 			end
 		end
 		
-		if ssX ~= nil then
+		if ssX ~= nil then -- if any collision detected draw it with appropiotate shade of gray and size
 			c	= 4/distance(ssX, ssY, camera.x, camera.y)
 			love.graphics.setColor(c,c,c)
 			love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c)
 			love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c)
 			love.graphics.setColor(255, 255, 255)
 		end
-		
+		-- remove all collisions
 		ssX, ssY, sX, sY = nil
 	end
+	-- debug data
 	love.graphics.print("Current FPS: "..tostring(love.timer.getFPS()), 10, 10)
 	love.graphics.print("X: "..tostring(camera.x), 10, 20)
 	love.graphics.print("Y: "..tostring(camera.y), 10, 30)
