@@ -78,22 +78,6 @@ function between(sx, sy, ex, ey, tx, ty)
 	end
 end
 
-function handle(hr, hiX, hiY, hsX, hsY)
-	if hr == true then -- if colission detected
-		if hsX == nil then -- if no previous collision
-			hsX = hiX
-			hsY = hiY
-		else	-- if current collision is closer than previous
-			if distance(hiX, hiY, camera.x, camera.y) < distance(hsX, hsY, camera.x, camera.y) then
-				hsX = hiX
-				hsY = hiY
-			end
-		end
-		return hsX, hsY
-	end
-
-end
-
 function love.draw()
 	for i=1,181,1 do -- for every ray
 		for j=1,msx,1 do -- for every tile
@@ -107,26 +91,66 @@ function love.draw()
 					endX		= camera.x+(math.sin(angle)*300) -- x coord of point at end of ray
 					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
 					-- check collision between ray and one of 4 lines of tile
-					
 					r,iX, iY 	= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey) 
-					handle(r, iX, iY, sX, sY)
-					
+					if r == true then -- if colission detected
+						if sX == nil then -- if no previous collision
+							sX = iX
+							sY = iY
+						else	-- if current collision is closer than previous
+							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
+								sX = iX
+								sY = iY
+							end
+						end
+					end
+					-- repeat 3 more times with different parts
 					ex		= sx
 					ey		= sy + s
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					handle(r, iX, iY, sX, sY)	
+					if r == true then
+						if sX == nil then
+							sX = iX
+							sY = iY
+						else
+							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
+								sX = iX
+								sY = iY
+							end
+						end
+					end
 					
 					sx		= sx + s
 					ex		= sx  
 					ey		= sy + s
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					handle(r, iX, iY, sX, sY)
+					if r == true then
+						if sX == nil then
+							sX = iX
+							sY = iY
+						else
+							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
+								sX = iX
+								sY = iY
+							end
+						end
+					end
 	
 					sy		= sy + s
 					ex		= sx - s
 					ey		= sy
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					handle(r, iX, iY, sX, sY)
+					if r == true then
+						if sX == nil then
+							sX = iX
+							sY = iY
+						else
+							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
+								sX = iX
+								sY = iY
+							end
+						end
+					end
+
 				end
 			end
 		end
