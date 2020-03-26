@@ -1,13 +1,13 @@
 function love.load()
 	map		= {}
-	map[1]		= {1, 1, 1, 1, 1, 1, 1, 1}
-	map[2]		= {1, 0, 0, 1, 0, 0, 0, 1}
-	map[3]		= {1, 0, 0, 1, 0, 1, 1, 1}
-	map[4]		= {1, 0, 0, 0, 0, 0, 0, 1}
-	map[5]		= {1, 1, 0, 1, 0, 0, 0, 0}
-	map[6]		= {1, 0, 0, 0, 0, 1, 0, 1}
-	map[7]		= {1, 0, 0, 0, 0, 1, 0, 1}
-	map[8]		= {1, 1, 1, 1, 1, 1, 1, 1}
+	map[1]		= {9, 9, 9, 9, 9, 9, 9, 9}	-- map values are represented as 0b0000, 4 bits for 4 walls
+	map[2]		= {9, 0, 0, 9, 0, 0, 0, 9}	-- 1st bit - left, 2nd bit - right
+	map[3]		= {9, 0, 0, 9, 0, 9, 9, 9}	-- 3rd bit - up, 4th bit - down
+	map[4]		= {9, 0, 0, 0, 0, 0, 0, 2}
+	map[5]		= {9, 9, 0, 1, 0, 0, 0, 0}
+	map[6]		= {9, 0, 0, 0, 0, 9, 0, 9}
+	map[7]		= {9, 0, 0, 0, 0, 9, 0, 9}
+	map[8]		= {9, 9, 9, 9, 9, 9, 9, 9}
 
 	msx		= 8	-- width of map
 	msy		= 8	-- height of map
@@ -78,11 +78,19 @@ function between(sx, sy, ex, ey, tx, ty)
 	end
 end
 
+function binaryAnd(one, two)
+	if math.floor(one / two) == one / two then
+		return true
+	else
+		return false
+	end
+end
+
 function love.draw()
 	for i=1,181,1 do -- for every ray
 		for j=1,msx,1 do -- for every tile
 			for k=1,msy,1 do -- ^
-				if map[k][j] == 1 then
+				if map[k][j] ~= 0 then
 					sx		= s*(j-1) -- starting x coord of one of 4 lines
 					sy		= s*(k-1) -- starting y coord of one of 4 lines
 					ex		= sx + s  -- ending x coord of one of 4 lines
@@ -92,7 +100,7 @@ function love.draw()
 					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
 					-- check collision between ray and one of 4 lines of tile
 					r,iX, iY 	= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey) 
-					if r == true then -- if colission detected
+					if r == true and bit.band(map[k][j], 1) == 1 then -- if colission detected
 						if sX == nil then -- if no previous collision
 							sX = iX
 							sY = iY
@@ -107,7 +115,7 @@ function love.draw()
 					ex		= sx
 					ey		= sy + s
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					if r == true then
+					if r == true and bit.band(map[k][j], 2) == 2 then
 						if sX == nil then
 							sX = iX
 							sY = iY
@@ -123,7 +131,7 @@ function love.draw()
 					ex		= sx  
 					ey		= sy + s
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					if r == true then
+					if r == true and bit.band(map[k][j], 4) == 4 then
 						if sX == nil then
 							sX = iX
 							sY = iY
@@ -139,7 +147,7 @@ function love.draw()
 					ex		= sx - s
 					ey		= sy
 					r,iX,iY		= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey)
-					if r == true then
+					if r == true and bit.band(map[k][j], 8) == 8 then
 						if sX == nil then
 							sX = iX
 							sY = iY
@@ -165,10 +173,12 @@ function love.draw()
 		
 		if ssX ~= nil then -- if any collision detected draw it with appropiotate shade of gray and size
 			c	= 4/distance(ssX, ssY, camera.x, camera.y)
-			love.graphics.setColor(c,c,c)
-			love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c)
-			love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c)
-			love.graphics.setColor(1, 1, 1)
+			if c > 0.01 then
+				love.graphics.setColor(c,c,c)
+				love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c)
+				love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c)
+				love.graphics.setColor(1, 1, 1)
+			end
 		end
 		-- remove all collisions
 		ssX, ssY, sX, sY = nil
