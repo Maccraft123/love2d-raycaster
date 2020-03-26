@@ -22,7 +22,7 @@ end
 
 function love.update(dt)
 	if love.keyboard.isDown("w")  then
-		camera.x = camera.x + math.sin(camera.a)*4
+		camera.x = camera.x + math.sin(camera.a)*4	-- move in direction of camera
 		camera.y = camera.y + math.cos(camera.a)*4
 	end
 	if love.keyboard.isDown("s") then
@@ -37,6 +37,7 @@ function love.update(dt)
 	end
 end
 
+-- this function checks if 2 lines collide and gives x and y of collision
 function checkLine(OsX, OsY, OeX, OeY, TsX, TsY, TeX, TeY)
 	a1	= OeY - OsY
 	b1	= OsX - OeX
@@ -78,23 +79,110 @@ function between(sx, sy, ex, ey, tx, ty)
 	end
 end
 
+-- code for reflections
+function reflect(x, y, camerax, cameray, direction)
+	if direction == "vertical" then
+		diffy	= cameray - y
+		endX	= camerax
+		endY	= cameray - diffy
+	else
+		diffx	= camerax - x
+		endX	= camerax - diffx
+		endY	= cameray
+	end
+
+	for j=1,msx,1 do
+		for k=1,msy,1 do
+			if map[k][j] ~= 0 then
+				sx		= s*(j-1)
+				sy		= s*(k-1)
+				ex		= sx + s
+				ey		= sy
+				r, iX, iY	= checkLine(x, y, endX, endY, sx, sy, ex, ey)
+				if r then 
+					if sX == nil then
+						sX = iX
+						sY = iY
+					else
+						if distance(iX, iY, x, y) < distance(sX, sY, x, y) then
+							sX = iX
+							sY = iY
+						end
+					end
+				end
+
+				ex		= sx
+				ey		= sy + s
+				r, iX, iY	= checkLine(x, y, endX, endY, sx, sy, ex, ey)
+				if r then
+					if sX == nil then
+						sX = iX
+						sY = iY
+					else
+						if distance(iX, iY, x, y) < distance(sX, sY, x, y) then
+							sX = iX
+							sY = iY
+						end
+					end
+				end
+				sx		= sx + s
+				ex		= sx
+				ey		= sy + s
+				r, iX, iY	= checkLine(x, y, endX, endY, sx, sy, ex, ey)
+				if r then
+					if sX == nil then
+						sX = iX
+						sY = iY
+					else
+						if distance(iX, iY, x, y) < distance(sX, sY, x, y) then
+							sX = iX
+							sY = iY
+						end
+					end
+				end
+				sy		= sy + s
+				ex		= sx - s
+				ey		= sy
+				r, iX, iY	= checkLine(x, y, endX, endY, sx, sy, ex, ey)
+				if r then
+					if sX == nil then
+						sX = iX
+						sY = iY
+					else
+						if distance(iX, iY, x, y) < distance(sX, sY, x, y) then
+							sX = iX
+							sY = iY
+						end
+					end
+				end
+			end
+		end
+	end
+	if sX ~= nil then
+		result	= distance(x, y, sX, sY)
+		return result
+	else
+		return 0
+	end
+end
+
 function love.draw()
 	for i=1,181,1 do -- for every ray
 		for j=1,msx,1 do -- for every tile
 			for k=1,msy,1 do -- ^
 				if map[k][j] ~= 0 then
-					sx		= s*(j-1) -- starting x coord of one of 4 lines
+					sx		= s*(j-1) -- starting x coord of one of 4 lines making a tile
 					sy		= s*(k-1) -- starting y coord of one of 4 lines
 					ex		= sx + s  -- ending x coord of one of 4 lines
-					ey		= sy
+					ey		= sy      -- ending y coord of one of 4 lines
 					angle		= camera.a+((i/2)-45)*math.pi/180 -- angle in degrees
 					endX		= camera.x+(math.sin(angle)*300) -- x coord of point at end of ray
 					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
 					-- check collision between ray and one of 4 lines of tile
 					r,iX, iY 	= checkLine(camera.x, camera.y, endX, endY, sx, sy, ex, ey) 
-					if r == true then -- if colission detected
+					if r then -- if colission detected save the x and y of collision
 						if sX == nil then -- if no previous collision
-							sX = iX
+							sX = iX -- save the collision data
 							sY = iY
 						else	-- if current collision is closer than previous
 							if distance(iX, iY, camera.x, camera.y) < distance(sX, sY, camera.x, camera.y) then
@@ -155,7 +243,7 @@ function love.draw()
 			end
 		end
 		
-		if sX ~= nil then --if collision detected
+		if sX ~= nil then --if collision detected on this iteration
 			if ssX == nil or distance(sX, sY, camera.x, camera.y) < distance(ssX, ssY, camera.x, camera.y) then
 				-- ^ if no collusion was detected on whole ray OR current collision is closest
 				ssX = sX
@@ -165,10 +253,17 @@ function love.draw()
 		
 		if ssX ~= nil then -- if any collision detected draw it with appropiotate shade of gray and size
 			c	= 4/distance(ssX, ssY, camera.x, camera.y)
-			if c > 0.01 then
-				love.graphics.setColor(c,c,c)
-				love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c)
-				love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c)
+			if c > 0.01 then -- don't calculate stuff that you won't see anyway
+				love.graphics.setColor(c, c, c) -- set appropioate shade of gray
+				love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c) -- draw upper rectangle
+				love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c) -- draw lower rectangle
+				love.graphics.setColor(1, 1, 1) -- reset color to white
+			end
+			if ssX > 190 and ssX < 210 then --reflection code ∨
+				d = reflect(ssX, ssY, camera.x, camera.y, "horizontal")
+				love.graphics.setColor(d, d, d)
+				love.graphics.rectangle("fill", 5*i, 0, 5, -2000*d)
+				love.graphics.rectangle("fill", 5*i, 0, 5, 2000*d)
 				love.graphics.setColor(1, 1, 1)
 			end
 		end
