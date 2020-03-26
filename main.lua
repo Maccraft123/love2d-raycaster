@@ -66,7 +66,7 @@ function checkLine(OsX, OsY, OeX, OeY, TsX, TsY, TeX, TeY)
 end
 
 function distance(sx, sy, ex, ey)
-	return math.floor(math.sqrt((sx - ex)^2 + (sy - ey)^2)+0.5)
+	return math.sqrt((sx - ex)^2 + (sy - ey)^2)
 end
 
 function between(sx, sy, ex, ey, tx, ty)
@@ -168,7 +168,7 @@ function love.draw()
 			love.graphics.setColor(c,c,c)
 			love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c)
 			love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c)
-			love.graphics.setColor(255, 255, 255)
+			love.graphics.setColor(1, 1, 1)
 		end
 		-- remove all collisions
 		ssX, ssY, sX, sY = nil
