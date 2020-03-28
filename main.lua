@@ -18,22 +18,25 @@ function love.load()
 	camera.x	= 430	-- starting x coordinate of camera
 	camera.y	= 230	-- starting y coordinate of camera
 	camera.a	= 5	-- starting camera angle
+
+	rays		= 100
+	fov		= 80
 end
 
 function love.update(dt)
 	if love.keyboard.isDown("w")  then
-		camera.x = camera.x + math.sin(camera.a)*4	-- move in direction of camera
-		camera.y = camera.y + math.cos(camera.a)*4
+		camera.x = camera.x + math.sin(camera.a+fov)*200*dt	-- move in direction of camera
+		camera.y = camera.y + math.cos(camera.a+fov)*200*dt	-- correction has to be made because fov isn't always 90deg
 	end
 	if love.keyboard.isDown("s") then
-		camera.x = camera.x - math.sin(camera.a)*4
-		camera.y = camera.y - math.cos(camera.a)*4
+		camera.x = camera.x - math.sin(camera.a+fov)*200*dt
+		camera.y = camera.y - math.cos(camera.a+fov)*200*dt
 	end
 	if love.keyboard.isDown("d") then
-		camera.a = camera.a + 0.05
+		camera.a = camera.a + 4*dt
 	end
 	if love.keyboard.isDown("a") then
-		camera.a = camera.a - 0.05
+		camera.a = camera.a - 4*dt
 	end
 end
 
@@ -70,9 +73,14 @@ function distance(sx, sy, ex, ey)
 	return math.sqrt((sx - ex)^2 + (sy - ey)^2)
 end
 
+-- https://www.arduino.cc/reference/en/language/functions/math/map/
+function remap(x, in_min, in_max, out_min, out_max)
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+end
+
 function between(sx, sy, ex, ey, tx, ty)
 	l = math.abs(distance(sx, sy, tx, ty) + distance(tx, ty, ex, ey) - distance(sx, sy, ex, ey))
-	if l < 0.2 then
+	if l < 0.01 then
 		return true
 	else
 		return false
@@ -159,7 +167,8 @@ function reflect(x, y, camerax, cameray, direction)
 		end
 	end
 	if sX ~= nil then
-		result	= distance(x, y, sX, sY)
+		result	= 1/distance(x, y, sX, sY)
+		love.graphics.print(tostring(sY), 50, 10)
 		return result
 	else
 		return 0
@@ -167,7 +176,7 @@ function reflect(x, y, camerax, cameray, direction)
 end
 
 function love.draw()
-	for i=1,181,1 do -- for every ray
+	for i=0,rays,1 do -- for every ray
 		for j=1,msx,1 do -- for every tile
 			for k=1,msy,1 do -- ^
 				if map[k][j] ~= 0 then
@@ -175,7 +184,7 @@ function love.draw()
 					sy		= s*(k-1) -- starting y coord of one of 4 lines
 					ex		= sx + s  -- ending x coord of one of 4 lines
 					ey		= sy      -- ending y coord of one of 4 lines
-					angle		= camera.a+((i/2)-45)*math.pi/180 -- angle in degrees
+					angle		= camera.a+((i/rays)-(fov/2)) -- angle of this ray
 					endX		= camera.x+(math.sin(angle)*300) -- x coord of point at end of ray
 					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
 					-- check collision between ray and one of 4 lines of tile
@@ -255,15 +264,16 @@ function love.draw()
 			c	= 4/distance(ssX, ssY, camera.x, camera.y)
 			if c > 0.01 then -- don't calculate stuff that you won't see anyway
 				love.graphics.setColor(c, c, c) -- set appropioate shade of gray
-				love.graphics.rectangle("fill", 5*i, 300, 5, -2000*c) -- draw upper rectangle
-				love.graphics.rectangle("fill", 5*i, 300, 5, 2000*c) -- draw lower rectangle
+				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 300, 800/rays, -2000*c) -- draw upper rectangle
+				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 300, 800/rays, 2000*c) -- draw lower rectangle
 				love.graphics.setColor(1, 1, 1) -- reset color to white
 			end
-			if ssX > 190 and ssX < 210 then --reflection code ∨
+			if ssX < 205 and ssX > 195 then --reflection code ∨
+				love.graphics.rectangle("fill", 1, 1, 10, 10)
 				d = reflect(ssX, ssY, camera.x, camera.y, "horizontal")
-				love.graphics.setColor(d, d, d)
-				love.graphics.rectangle("fill", 5*i, 0, 5, -2000*d)
-				love.graphics.rectangle("fill", 5*i, 0, 5, 2000*d)
+				love.graphics.setColor(1, 1, 1)
+				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 200000*d)
+				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 2000*d)
 				love.graphics.setColor(1, 1, 1)
 			end
 		end
