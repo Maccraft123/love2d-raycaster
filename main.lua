@@ -19,18 +19,18 @@ function love.load()
 	camera.y	= 230	-- starting y coordinate of camera
 	camera.a	= 5	-- starting camera angle
 
-	rays		= 100
-	fov		= 80
+	rays		= 300
+	fov		= 90
 end
 
 function love.update(dt)
 	if love.keyboard.isDown("w")  then
-		camera.x = camera.x + math.sin(camera.a+fov)*200*dt	-- move in direction of camera
-		camera.y = camera.y + math.cos(camera.a+fov)*200*dt	-- correction has to be made because fov isn't always 90deg
+		camera.x = camera.x + math.sin(camera.a)*200*dt	-- move in direction of camera
+		camera.y = camera.y + math.cos(camera.a)*200*dt	-- multiplied by delta time because fps differs
 	end
 	if love.keyboard.isDown("s") then
-		camera.x = camera.x - math.sin(camera.a+fov)*200*dt
-		camera.y = camera.y - math.cos(camera.a+fov)*200*dt
+		camera.x = camera.x - math.sin(camera.a)*200*dt
+		camera.y = camera.y - math.cos(camera.a)*200*dt
 	end
 	if love.keyboard.isDown("d") then
 		camera.a = camera.a + 4*dt
@@ -184,7 +184,7 @@ function love.draw()
 					sy		= s*(k-1) -- starting y coord of one of 4 lines
 					ex		= sx + s  -- ending x coord of one of 4 lines
 					ey		= sy      -- ending y coord of one of 4 lines
-					angle		= camera.a+((i/rays)-(fov/2)) -- angle of this ray
+					angle		= camera.a+remap(i, 0, rays, fov/-2, fov/2)*(math.pi/180) -- angle of this ray in radians
 					endX		= camera.x+(math.sin(angle)*300) -- x coord of point at end of ray
 					endY		= camera.y+(math.cos(angle)*300) -- y coord of point at end of ray
 					-- check collision between ray and one of 4 lines of tile
