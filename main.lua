@@ -19,7 +19,8 @@ function love.load()
 	camera.y	= 230	-- starting y coordinate of camera
 	camera.a	= 5	-- starting camera angle
 
-	rays		= 300
+	raysfinal	= 100
+	rays		= 10
 	fov		= 90
 end
 
@@ -37,6 +38,9 @@ function love.update(dt)
 	end
 	if love.keyboard.isDown("a") then
 		camera.a = camera.a - 4*dt
+	end
+	if rays + 1 < raysfinal then
+		rays	= rays + 100*dt
 	end
 end
 
@@ -272,7 +276,7 @@ function love.draw()
 				love.graphics.rectangle("fill", 1, 1, 10, 10)
 				d = reflect(ssX, ssY, camera.x, camera.y, "horizontal")
 				love.graphics.setColor(1, 1, 1)
-				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 200000*d)
+				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 2000*d)
 				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 2000*d)
 				love.graphics.setColor(1, 1, 1)
 			end
