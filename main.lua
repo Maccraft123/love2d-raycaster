@@ -20,7 +20,7 @@ function love.load()
 	camera.a	= 5	-- starting camera angle
 
 	raysfinal	= 100
-	rays		= 10
+	rays		= 2
 	fov		= 90
 end
 
@@ -41,6 +41,11 @@ function love.update(dt)
 	end
 	if rays + 1 < raysfinal then
 		rays	= rays + 100*dt
+	end
+	if dt > 0.2 then
+		rays	= rays - 1
+	elseif dt < 0.01 then
+		rays	= rays + 1
 	end
 end
 
@@ -171,11 +176,10 @@ function reflect(x, y, camerax, cameray, direction)
 		end
 	end
 	if sX ~= nil then
-		result	= 1/distance(x, y, sX, sY)
-		love.graphics.print(tostring(sY), 50, 10)
-		return result
+		love.graphics.print(tostring(distance(s, y, sX, sY)/2), 10, 90)
+		return distance(x, y, sX, sY)
 	else
-		return 0
+		return 1/1000
 	end
 end
 
@@ -270,16 +274,15 @@ function love.draw()
 				love.graphics.setColor(c, c, c) -- set appropioate shade of gray
 				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 300, 800/rays, -2000*c) -- draw upper rectangle
 				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 300, 800/rays, 2000*c) -- draw lower rectangle
-				love.graphics.setColor(1, 1, 1) -- reset color to white
-			end
-			if ssX < 205 and ssX > 195 then --reflection code ∨
-				love.graphics.rectangle("fill", 1, 1, 10, 10)
-				d = reflect(ssX, ssY, camera.x, camera.y, "horizontal")
-				love.graphics.setColor(1, 1, 1)
-				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 2000*d)
-				love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 0, 5, 2000*d)
 				love.graphics.setColor(1, 1, 1)
 			end
+			--if ssX < 205 and ssX > 195 then --reflection code ∨
+			--	d = reflect(ssX, ssY, camera.x, camera.y, "horizontal")
+			--	love.graphics.setColor(1, 1, 1)
+			--	love.graphics.print(""..tostring(d), 10, 40)
+			--	love.graphics.rectangle("fill", remap(i, 0, rays, 0, 800), 300, 800/rays, 2000*d)
+			--	love.graphics.setColor(1, 1, 1)
+			--end
 		end
 		-- remove all collisions
 		ssX, ssY, sX, sY = nil
